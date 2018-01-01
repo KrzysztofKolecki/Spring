@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 
+import com.example.shdemo.domain.Customer;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,8 +13,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.transaction.TransactionConfiguration;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.example.shdemo.domain.Car;
-import com.example.shdemo.domain.Person;
+import com.example.shdemo.domain.Shirt;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations = { "classpath:/beans.xml" })
@@ -24,91 +24,84 @@ public class SellingManagerTest {
 	@Autowired
 	SellingManager sellingManager;
 
-	private final String NAME_1 = "Bolek";
-	private final String PIN_1 = "1234";
+	private final String NAME_1 = "Nike air";
+	private final String COLOR_1 = "black";
+	private final String SIZE_1 = "L";
+	
+	private final String NAME_2 = "Patagonia";
+	private final String COLOR_2 = "black";
+	private final String SIZE_2 = "XL";
 
-	private final String NAME_2 = "Lolek";
-	private final String PIN_2 = "4321";
-
-	private final String MODEL_1 = "126p";
-	private final String MAKE_1 = "Fiat";
-
-	private final String MODEL_2 = "Mondeo";
-	private final String MAKE_2 = "Ford";
-
-	@Test
-	public void addClientCheck() {
-
-		List<Person> retrievedClients = sellingManager.getAllClients();
-
-		// If there is a client with PIN_1 delete it
-		for (Person client : retrievedClients) {
-			if (client.getPin().equals(PIN_1)) {
-				sellingManager.deleteClient(client);
-			}
-		}
-
-		Person person = new Person();
-		person.setFirstName(NAME_1);
-		person.setPin(PIN_1);
-		// ... other properties here
-
-		// Pin is Unique
-		sellingManager.addClient(person);
-
-		Person retrievedClient = sellingManager.findClientByPin(PIN_1);
-
-		assertEquals(NAME_1, retrievedClient.getFirstName());
-		assertEquals(PIN_1, retrievedClient.getPin());
-		// ... check other properties here
-	}
+	private final String CUSTOMER_NAME = "Adam";
+	private final String CUSTOMER_SURNAME = "Kowal";
 
 	@Test
-	public void addCarCheck() {
+	public void addCustomerCheck() {
 
-		Car car = new Car();
-		car.setMake(MAKE_1);
-		car.setModel(MODEL_1);
-		// ... other properties here
+		Customer customer = new Customer();
+		customer.setName(CUSTOMER_NAME);
+		customer.setSurname(CUSTOMER_SURNAME);
 
-		Long carId = sellingManager.addNewCar(car);
+		Long customerId = sellingManager.addCustomer(customer);
 
-		Car retrievedCar = sellingManager.findCarById(carId);
-		assertEquals(MAKE_1, retrievedCar.getMake());
-		assertEquals(MODEL_1, retrievedCar.getModel());
-		// ... check other properties here
+		Customer retrievedCustomer = sellingManager.findCustomerById(customerId);
+		assertEquals(CUSTOMER_NAME, retrievedCustomer.getName());
+		assertEquals(CUSTOMER_SURNAME, retrievedCustomer.getSurname());
+		
+		sellingManager.deleteCustomer(customer);
+		
+		retrievedCustomer = sellingManager.findCustomerById(customerId);
+		assertEquals(null, retrievedCustomer);
 
 	}
 
 	@Test
-	public void sellCarCheck() {
+	public void addShirtCheck() {
 
-		Person person = new Person();
-		person.setFirstName(NAME_2);
-		person.setPin(PIN_2);
+		Shirt shirt = new Shirt();
+		shirt.setName(NAME_1);
+		shirt.setColor(COLOR_1);
+		shirt.setSize(SIZE_1);
 
-		sellingManager.addClient(person);
+		Long shirtId = sellingManager.addNewShirt(shirt);
 
-		Person retrievedPerson = sellingManager.findClientByPin(PIN_2);
+		Shirt retrievedShirt = sellingManager.findShirtById(shirtId);
+		assertEquals(NAME_1, retrievedShirt.getName());
+		assertEquals(COLOR_1, retrievedShirt.getColor());
+		assertEquals(SIZE_1, retrievedShirt.getSize());
 
-		Car car = new Car();
-		car.setMake(MAKE_2);
-		car.setModel(MODEL_2);
-
-		Long carId = sellingManager.addNewCar(car);
-
-		sellingManager.sellCar(retrievedPerson.getId(), carId);
-
-		List<Car> ownedCars = sellingManager.getOwnedCars(retrievedPerson);
-
-		assertEquals(1, ownedCars.size());
-		assertEquals(MAKE_2, ownedCars.get(0).getMake());
-		assertEquals(MODEL_2, ownedCars.get(0).getModel());
+		sellingManager.deleteShirt(shirt);
+		
+		Shirt retrievedShirt2 = sellingManager.findShirtById(shirtId);
+		assertEquals(null, retrievedShirt2);
+		
 	}
+	
+	@Test
+	public void sellShirtCheck() {
 
-	// @Test -
-	public void disposeCarCheck() {
-		// Do it yourself
+		Customer customer = new Customer();
+		customer.setName(CUSTOMER_NAME);
+		customer.setSurname(CUSTOMER_SURNAME);
+		Long customerId = sellingManager.addCustomer(customer);
+		
+		Shirt shirt = new Shirt();
+		shirt.setName(NAME_2);
+		shirt.setColor(COLOR_2);
+		shirt.setSize(SIZE_2);
+		Long shirtId = sellingManager.addNewShirt(shirt);
+
+		sellingManager.sellShirt(customerId, shirtId);
+		
+		Customer retrievedCustomer = sellingManager.findCustomerById(customerId);
+		List<Shirt> ownedShirts = sellingManager.getOwnedShirts(retrievedCustomer);
+		
+	
+		assertEquals(1, ownedShirts.size());
+		assertEquals(NAME_2, ownedShirts.get(0).getName());
+		assertEquals(COLOR_2, ownedShirts.get(0).getColor());
+		assertEquals(SIZE_2, ownedShirts.get(0).getSize());
+		assertEquals(customer, ownedShirts.get(0).getCustomer());
 	}
 
 }
